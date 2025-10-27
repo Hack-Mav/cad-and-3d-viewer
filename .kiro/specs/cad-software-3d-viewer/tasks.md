@@ -2,10 +2,6 @@
 
 - [x] 1. Set up project foundation and core infrastructure
 
-
-
-
-
   - Initialize React + TypeScript + Vite project with proper configuration
   - Set up Three.js integration and WebGL context management
   - Configure Tailwind CSS and shadcn/ui component library
@@ -36,9 +32,7 @@
   - Create basic test utilities and mock data generators
   - _Requirements: Testing Strategy_
 
-- [ ] 2. Implement core geometry engine and data structures
-
-
+- [x] 2. Implement core geometry engine and data structures
 
   - Create fundamental geometry classes (Point, Vector, Plane, Transform)
   - Implement basic geometric operations and utilities
@@ -46,14 +40,16 @@
   - Create project data model with Part, Assembly, and Material structures
   - _Requirements: 1.5, 4.4, 11.2_
 
-- [ ] 2.1 Build 2D sketch engine foundation
+- [x] 2.1 Build 2D sketch engine foundation
+
   - Implement Sketch class with geometric elements (Line, Arc, Circle, Spline)
   - Create sketch plane management and coordinate transformations
   - Set up geometric element creation and manipulation
   - Implement basic sketch validation and closure detection
   - _Requirements: 1.1, 1.2, 3.5_
 
-- [ ] 2.2 Implement constraint system architecture
+- [x] 2.2 Implement constraint system architecture
+
   - Create constraint base classes and specific constraint types
   - Implement constraint solver using iterative numerical methods
   - Set up constraint visualization and status indicators
