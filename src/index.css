@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  }
+}
+
+/* CAD-specific styles */
+.viewport-container {
+  @apply relative overflow-hidden;
+}
+
+.toolbar {
+  @apply flex items-center gap-2 p-2 bg-white border-b border-gray-200;
+}
+
+.dark .toolbar {
+  @apply bg-gray-900 border-gray-700;
+}
+
+.property-panel {
+  @apply bg-white border-l border-gray-200 p-4;
+}
+
+.dark .property-panel {
+  @apply bg-gray-900 border-gray-700;
+}
+
+.status-bar {
+  @apply bg-gray-100 text-gray-600 text-sm p-2 border-t border-gray-200;
+}
+
+.dark .status-bar {
+  @apply bg-gray-800 text-gray-300 border-gray-700;
+}
