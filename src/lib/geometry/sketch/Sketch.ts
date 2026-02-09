@@ -319,6 +319,27 @@ export class Sketch {
   }
 
   /**
+   * Convert to JSON representation
+   */
+  toJSON(): any {
+    return {
+      id: this.id,
+      name: this.name,
+      plane: {
+        origin: this.plane.origin.toArray(),
+        normal: this.plane.normal.toArray(),
+        xAxis: this.plane.xAxis.toArray(),
+        yAxis: this.plane.yAxis.toArray()
+      },
+      elements: Array.from(this.elements.values()).map(element => ({
+        id: element.id,
+        type: element.type,
+        controlPoints: element.getControlPoints().map(p => p.toArray())
+      }))
+    };
+  }
+
+  /**
    * Convert to string representation
    */
   toString(): string {
