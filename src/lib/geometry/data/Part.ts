@@ -2,6 +2,9 @@ import { Material } from './Material';
 import { Transform } from '../core/Transform';
 import { Point } from '../core/Point';
 import { Sketch } from '../sketch/Sketch';
+import { Solid } from '../solid/Solid';
+import { FeatureEngine } from '../solid/FeatureEngine';
+import type { FeatureResult, FeatureContext } from '../solid/FeatureEngine';
 
 /**
  * Feature types for parametric modeling
@@ -201,6 +204,9 @@ export class Part {
   public isVisible: boolean;
   public created: Date;
   public modified: Date;
+  public solid?: Solid;
+  private featureEngine: FeatureEngine;
+  private needsRegeneration: boolean;
 
   constructor(name: string, id?: string) {
     this.id = id || this.generateId();
@@ -214,6 +220,8 @@ export class Part {
     this.isVisible = true;
     this.created = new Date();
     this.modified = new Date();
+    this.featureEngine = new FeatureEngine();
+    this.needsRegeneration = false;
   }
 
   /**
@@ -228,6 +236,7 @@ export class Part {
    */
   addFeature(feature: Feature): void {
     this.features.set(feature.id, feature);
+    this.needsRegeneration = true;
     this.modified = new Date();
   }
 
@@ -241,6 +250,7 @@ export class Part {
       for (const feature of this.features.values()) {
         feature.removeDependency(featureId);
       }
+      this.needsRegeneration = true;
       this.modified = new Date();
     }
     return removed;
@@ -478,9 +488,116 @@ export class Part {
   }
 
   /**
+   * Regenerate the part geometry from features
+   */
+  regenerate(sketches?: Map<string, Sketch>): Map<string, FeatureResult> {
+    const context: FeatureContext = {
+      previousSolids: new Map(),
+      sketches: sketches || new Map(),
+      parameters: new Map()
+    };
+
+    // Get features in dependency order
+    const orderedFeatures = this.getFeatureTree();
+    
+    // Regenerate features
+    const results = this.featureEngine.regenerateFeatures(orderedFeatures, context);
+    
+    // Update part solid with the last successful result
+    let lastSolid: Solid | undefined;
+    for (const [featureId, result] of results) {
+      if (result.success && result.solid) {
+        lastSolid = result.solid;
+        // Apply part material to the solid if available
+        if (this.material) {
+          lastSolid.setMaterial(this.material);
+        }
+      }
+    }
+    
+    this.solid = lastSolid;
+    this.needsRegeneration = false;
+    
+    // Update part properties from solid
+    if (this.solid) {
+      this.properties.volume = this.solid.properties.volume;
+      this.properties.surfaceArea = this.solid.properties.surfaceArea;
+      this.properties.centerOfMass = this.solid.properties.centerOfMass;
+      this.properties.boundingBox = this.solid.properties.boundingBox;
+      this.properties.mass = this.solid.properties.mass;
+    }
+    
+    this.modified = new Date();
+    return results;
+  }
+
+  /**
+   * Check if the part needs regeneration
+   */
+  needsRegenerationCheck(): boolean {
+    return this.needsRegeneration;
+  }
+
+  /**
+   * Force regeneration on next update
+   */
+  markForRegeneration(): void {
+    this.needsRegeneration = true;
+    this.modified = new Date();
+  }
+
+  /**
+   * Update a feature and mark for regeneration
+   */
+  updateFeature(featureId: string, updates: Partial<Feature>): boolean {
+    const feature = this.getFeature(featureId);
+    if (!feature) {
+      return false;
+    }
+
+    // Update feature properties
+    Object.assign(feature, updates);
+    feature.modified = new Date();
+    
+    this.needsRegeneration = true;
+    this.modified = new Date();
+    return true;
+  }
+
+  /**
+   * Update feature parameters
+   */
+  updateFeatureParameters(featureId: string, parameters: Partial<FeatureParameters>): boolean {
+    const feature = this.getFeature(featureId);
+    if (!feature) {
+      return false;
+    }
+
+    feature.updateParameters(parameters);
+    this.needsRegeneration = true;
+    this.modified = new Date();
+    return true;
+  }
+
+  /**
+   * Get the current solid geometry
+   */
+  getSolid(): Solid | undefined {
+    return this.solid;
+  }
+
+  /**
+   * Check if part has valid geometry
+   */
+  hasValidGeometry(): boolean {
+    return this.solid !== undefined && this.solid.validate().isValid;
+  }
+
+  /**
    * Convert to string representation
    */
   toString(): string {
-    return `Part(${this.name}, features: ${this.features.size})`;
+    const geometryStatus = this.solid ? 'with geometry' : 'no geometry';
+    return `Part(${this.name}, features: ${this.features.size}, ${geometryStatus})`;
   }
 }
