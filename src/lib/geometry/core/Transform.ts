@@ -246,4 +246,77 @@ export class Transform {
   static uniformScaling(scale: number): Transform {
     return Transform.scaling(scale, scale, scale);
   }
+
+  /**
+   * Create rotation transform around arbitrary axis
+   */
+  static rotation(point: Point, axis: Vector, angle: number): Transform {
+    const normalizedAxis = axis.normalize();
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const oneMinusCos = 1 - cos;
+    
+    const x = normalizedAxis.x;
+    const y = normalizedAxis.y;
+    const z = normalizedAxis.z;
+    
+    // Rodrigues' rotation formula in matrix form
+    const rotationMatrix = new Transform([
+      [
+        cos + x * x * oneMinusCos,
+        x * y * oneMinusCos - z * sin,
+        x * z * oneMinusCos + y * sin,
+        0
+      ],
+      [
+        y * x * oneMinusCos + z * sin,
+        cos + y * y * oneMinusCos,
+        y * z * oneMinusCos - x * sin,
+        0
+      ],
+      [
+        z * x * oneMinusCos - y * sin,
+        z * y * oneMinusCos + x * sin,
+        cos + z * z * oneMinusCos,
+        0
+      ],
+      [0, 0, 0, 1]
+    ]);
+    
+    // If rotation is not around origin, translate to origin, rotate, then translate back
+    if (!point.equals(new Point(0, 0, 0))) {
+      const toOrigin = Transform.translation(-point.x, -point.y, -point.z);
+      const fromOrigin = Transform.translation(point.x, point.y, point.z);
+      return fromOrigin.multiply(rotationMatrix).multiply(toOrigin);
+    }
+    
+    return rotationMatrix;
+  }
+
+  /**
+   * Create mirror transform across a plane
+   */
+  static mirror(planePoint: Point, planeNormal: Vector): Transform {
+    const normal = planeNormal.normalize();
+    const nx = normal.x;
+    const ny = normal.y;
+    const nz = normal.z;
+    
+    // Mirror matrix formula: I - 2 * n * n^T
+    const mirrorMatrix = new Transform([
+      [1 - 2 * nx * nx, -2 * nx * ny, -2 * nx * nz, 0],
+      [-2 * ny * nx, 1 - 2 * ny * ny, -2 * ny * nz, 0],
+      [-2 * nz * nx, -2 * nz * ny, 1 - 2 * nz * nz, 0],
+      [0, 0, 0, 1]
+    ]);
+    
+    // If plane doesn't pass through origin, translate to origin, mirror, then translate back
+    if (!planePoint.equals(new Point(0, 0, 0))) {
+      const toOrigin = Transform.translation(-planePoint.x, -planePoint.y, -planePoint.z);
+      const fromOrigin = Transform.translation(planePoint.x, planePoint.y, planePoint.z);
+      return fromOrigin.multiply(mirrorMatrix).multiply(toOrigin);
+    }
+    
+    return mirrorMatrix;
+  }
 }

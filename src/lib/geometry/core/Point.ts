@@ -54,6 +54,20 @@ export class Point {
   }
 
   /**
+   * Scale this point by a scalar
+   */
+  scale(scalar: number): Point {
+    return new Point(this.x * scalar, this.y * scalar, this.z * scalar);
+  }
+
+  /**
+   * Calculate dot product with another point (treating as vector)
+   */
+  dot(other: Point): number {
+    return this.x * other.x + this.y * other.y + this.z * other.z;
+  }
+
+  /**
    * Check if this point equals another point within tolerance
    */
   equals(other: Point, tolerance: number = 1e-6): boolean {

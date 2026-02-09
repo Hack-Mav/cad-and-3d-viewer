@@ -68,6 +68,13 @@ export class Vector {
   }
 
   /**
+   * Scale this vector by a scalar (alias for multiply)
+   */
+  scale(scalar: number): Vector {
+    return this.multiply(scalar);
+  }
+
+  /**
    * Divide this vector by a scalar
    */
   divide(scalar: number): Vector {
